@@ -46,7 +46,6 @@
   const FIRST_SEEN_KEY = "truffle_first_seen";
   const LAST_SEEN_KEY = "truffle_last_seen";
   function uuid() {
-    // Robust UUID v4 (falls back if crypto is unavailable)
     const rnd = () =>
       (window.crypto && crypto.getRandomValues)
         ? crypto.getRandomValues(new Uint8Array(1))[0] & 15
@@ -92,37 +91,43 @@
   }
   console.log("🆔 Session:", { sessionId: context.sessionId, firstSeen: context.firstSeen, lastSeen: context.lastSeen });
 
-  // ---------- IP + Geo (async) ----------
-  fetch("https://ipapi.co/json/")
-    .then((r) => (r.ok ? r.json() : Promise.reject(new Error("ipapi.co not OK"))))
-    .then((j) => {
-      context.ipAddress = j.ip || null;
-      context.geo = {
-        country: j.country_name || null,
-        countryCode: j.country || null,
-        region: j.region || null,
-        city: j.city || null,
-        timezone: j.timezone || null,
-      };
+  // ---------- IP + Geo (async, CORS-friendly) ----------
+  // Step 1: get public IP (ipify allows CORS)
+  fetch("https://api.ipify.org?format=json")
+    .then(r => r.json())
+    .then(({ ip }) => {
+      context.ipAddress = ip || null;
       console.log("🌐 IP:", context.ipAddress);
-      console.log("🗺️ Geo:", context.geo);
+
+      // Step 2: get geo (ipwho.is allows CORS, no key required)
+      if (!ip) throw new Error("No IP");
+      return fetch(`https://ipwho.is/${encodeURIComponent(ip)}`);
+    })
+    .then(r => r.json())
+    .then(j => {
+      if (j && j.success) {
+        context.geo = {
+          country: j.country || null,
+          countryCode: j.country_code || null,
+          region: j.region || null,
+          city: j.city || null,
+          timezone: (j.timezone && j.timezone.id) || null,
+        };
+        console.log("🗺️ Geo:", context.geo);
+      } else {
+        console.warn("Geo lookup failed or unavailable:", j && j.message);
+      }
       window.dispatchEvent(new Event("truffleContextUpdated"));
     })
-    .catch(() =>
-      fetch("https://api.ipify.org?format=json")
-        .then((r) => r.json())
-        .then((j) => {
-          context.ipAddress = j.ip || null;
-          console.log("🌐 IP:", context.ipAddress);
-          window.dispatchEvent(new Event("truffleContextUpdated"));
-        })
-        .catch((e) => console.warn("IP lookup failed:", e))
-    );
+    .catch(err => {
+      console.warn("IP/Geo lookup failed:", err);
+      window.dispatchEvent(new Event("truffleContextUpdated"));
+    });
 
   // ---------- Expose globally ----------
   window.TruffleContext = context;
 
-  // Update device on resize (optional, helps if user resizes a lot)
+  // Keep device label fresh if user resizes significantly
   window.addEventListener("resize", (() => {
     let t;
     return () => {
