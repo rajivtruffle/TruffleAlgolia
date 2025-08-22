@@ -76,7 +76,7 @@
     firstSeen,
     lastSeen,
     ipAddress: null,
-    geo: null, // { country, countryCode, region, city, timezone } when available
+    geo: null, // { country, countryCode, region, city, timezone }
   };
 
   // Log sync context
@@ -92,14 +92,11 @@
   console.log("🆔 Session:", { sessionId: context.sessionId, firstSeen: context.firstSeen, lastSeen: context.lastSeen });
 
   // ---------- IP + Geo (async, CORS-friendly) ----------
-  // Step 1: get public IP (ipify allows CORS)
   fetch("https://api.ipify.org?format=json")
     .then(r => r.json())
     .then(({ ip }) => {
       context.ipAddress = ip || null;
       console.log("🌐 IP:", context.ipAddress);
-
-      // Step 2: get geo (ipwho.is allows CORS, no key required)
       if (!ip) throw new Error("No IP");
       return fetch(`https://ipwho.is/${encodeURIComponent(ip)}`);
     })
@@ -127,7 +124,7 @@
   // ---------- Expose globally ----------
   window.TruffleContext = context;
 
-  // Keep device label fresh if user resizes significantly
+  // Keep device label fresh on resize
   window.addEventListener("resize", (() => {
     let t;
     return () => {
@@ -146,25 +143,16 @@
     });
   }
 
-  // ---------- Swap hero image by language ----------
-  const hero = document.querySelector("img.hero");
-  const caption = document.querySelector(".caption");
-  if (hero && caption) {
+  // ---------- Full-bleed background by language ----------
+  (function setLanguageBackground(){
+    const bg = document.querySelector(".bg");
+    if (!bg) return;
     const lang = currentLang();
-    if (lang === "en") {
-      hero.src = "../assets/Algolia_en.png";
-      hero.alt = "English Image";
-      caption.textContent = "English page";
-    } else if (lang === "fr") {
-      hero.src = "../assets/Algolia_fr.png";
-      hero.alt = "Page Française";
-      caption.textContent = "Page française";
-    } else if (lang === "de") {
-      hero.src = "../assets/Algolia_de.png";
-      hero.alt = "Deutsche Seite";
-      caption.textContent = "Deutsche Seite";
-    }
-  }
+    let url = "../assets/Algolia_en.png";
+    if (lang === "fr") url = "../assets/Algolia_fr.png";
+    if (lang === "de") url = "../assets/Algolia_de.png";
+    bg.style.backgroundImage = `url("${url}")`;
+  })();
 
   // ---------- Embedded Messaging integration ----------
   function compact(obj) {

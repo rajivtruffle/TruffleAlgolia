@@ -3,34 +3,28 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-  <title>Redirecting…</title>
-
-  <!-- JS redirect: prefer stored choice, else browser language, else EN -->
-  <script>
-    (function () {
-      var stored = localStorage.getItem("siteLang");
-      var browserLang = (navigator.language || "en").slice(0, 2).toLowerCase();
-      var supported = ["en", "fr", "de"];
-      var chosen = (stored && supported.includes(stored))
-        ? stored
-        : (supported.includes(browserLang) ? browserLang : "en");
-      // For a project site, ./en/ resolves to /TruffleAlgolia/en/
-      window.location.replace("./" + chosen + "/");
-    })();
-  </script>
-
-  <!-- Optional: meta refresh as a tiny fallback (will fire after 3s) -->
-  <meta http-equiv="refresh" content="3; url=./en/" />
+  <title>Truffle Media</title>
+  <link rel="icon" href="../assets/favicon.ico" />
+  <link rel="stylesheet" href="../assets/styles.css" />
 </head>
 <body>
-  Redirecting…
-  <noscript>
-    JavaScript is required. Please choose your language:
-    <ul>
-      <li><a href="./en/">English</a></li>
-      <li><a href="./fr/">Français</a></li>
-      <li><a href="./de/">Deutsch</a></li>
-    </ul>
-  </noscript>
+  <!-- Background layer (covers window) -->
+  <div class="bg"></div>
+
+  <!-- Overlays -->
+  <div class="lang-picker">
+    <label for="langSelect">Language</label>
+    <select id="langSelect" aria-label="Select language">
+      <option value="en">English</option>
+      <option value="fr">Français</option>
+      <option value="de">Deutsch</option>
+    </select>
+  </div>
+
+  <!-- Caption over image -->
+  <div class="caption">English page</div>
+
+  <!-- App (loads ESW dynamically) -->
+  <script src="../assets/app.js" defer></script>
 </body>
 </html>
