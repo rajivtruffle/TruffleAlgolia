@@ -3,8 +3,20 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
-  <meta http-equiv="refresh" content="0; url=./en/" />
   <title>Redirecting…</title>
+  <script>
+    (function() {
+      // Read from browser preference or stored localStorage
+      const stored = localStorage.getItem("siteLang");
+      const browserLang = (navigator.language || "en").slice(0,2).toLowerCase();
+      const supported = ["en","fr","de"];
+      const chosen = stored && supported.includes(stored) 
+        ? stored 
+        : supported.includes(browserLang) ? browserLang : "en";
+
+      window.location.replace("./" + chosen + "/");
+    })();
+  </script>
 </head>
-<body>Redirecting to /en/…</body>
+<body>Redirecting…</body>
 </html>
