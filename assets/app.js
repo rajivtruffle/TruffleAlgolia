@@ -38,15 +38,15 @@
   if (hero && caption){
     const lang = currentLang();
     if (lang === "en"){
-      hero.src = "../assets/img1.png";
+      hero.src = "../assets/Algolia_en.png";
       hero.alt = "English Image";
       caption.textContent = "English page";
     } else if (lang === "fr"){
-      hero.src = "../assets/img2.png";
+      hero.src = "../assets/Algolia_fr.png";
       hero.alt = "Page Française";
       caption.textContent = "Page française";
     } else if (lang === "de"){
-      hero.src = "../assets/img3.png";
+      hero.src = "../assets/Algolia_de.png";
       hero.alt = "Deutsche Seite";
       caption.textContent = "Deutsche Seite";
     }
