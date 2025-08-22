@@ -1,6 +1,6 @@
 // assets/app.js
 (function () {
-  const REPO = "TruffleAlgolia"; // GitHub Pages project repo name
+  const REPO = "TruffleAlgolia"; // <-- must match your repo name exactly
 
   // ---------- URL helpers ----------
   function getBasePath() {
@@ -13,7 +13,7 @@
     const parts = location.pathname.split("/").filter(Boolean);
     const idx = parts.indexOf(REPO);
     const lang = idx !== -1 ? parts[idx + 1] : null;
-    return ["en", "fr", "de"].includes((lang || "").toLowerCase()) ? lang : "en";
+    return ["en", "fr", "de"].includes((lang || "").toLowerCase()) ? (lang || "en") : "en";
   }
   function langUrl(lang) {
     return getBasePath() + lang + "/";
@@ -24,7 +24,7 @@
     const sp = new URLSearchParams(location.search);
     const pick = (k) => {
       const v = sp.get(k);
-      return v ? decodeURIComponent(v) : null;
+      return v ? v : null;
     };
     return {
       utm_source: pick("utm_source"),
@@ -46,14 +46,23 @@
   const FIRST_SEEN_KEY = "truffle_first_seen";
   const LAST_SEEN_KEY = "truffle_last_seen";
   function uuid() {
+    // Robust UUID v4 (falls back if crypto is unavailable)
+    const rnd = () =>
+      (window.crypto && crypto.getRandomValues)
+        ? crypto.getRandomValues(new Uint8Array(1))[0] & 15
+        : Math.floor(Math.random() * 16);
     return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
-      const r = (crypto.getRandomValues(new Uint8Array(1))[0] & 0xf) >> 0;
+      const r = rnd();
       const v = c === "x" ? r : (r & 0x3) | 0x8;
       return v.toString(16);
     });
   }
-  const sessionId = localStorage.getItem(SID_KEY) || (localStorage.setItem(SID_KEY, uuid()), localStorage.getItem(SID_KEY));
-  const firstSeen = localStorage.getItem(FIRST_SEEN_KEY) || (localStorage.setItem(FIRST_SEEN_KEY, new Date().toISOString()), localStorage.getItem(FIRST_SEEN_KEY));
+  const sessionId =
+    localStorage.getItem(SID_KEY) ||
+    (localStorage.setItem(SID_KEY, uuid()), localStorage.getItem(SID_KEY));
+  const firstSeen =
+    localStorage.getItem(FIRST_SEEN_KEY) ||
+    (localStorage.setItem(FIRST_SEEN_KEY, new Date().toISOString()), localStorage.getItem(FIRST_SEEN_KEY));
   localStorage.setItem(LAST_SEEN_KEY, new Date().toISOString());
   const lastSeen = localStorage.getItem(LAST_SEEN_KEY);
 
@@ -85,7 +94,7 @@
 
   // ---------- IP + Geo (async) ----------
   fetch("https://ipapi.co/json/")
-    .then((r) => r.ok ? r.json() : Promise.reject(new Error("ipapi.co not OK")))
+    .then((r) => (r.ok ? r.json() : Promise.reject(new Error("ipapi.co not OK"))))
     .then((j) => {
       context.ipAddress = j.ip || null;
       context.geo = {
@@ -97,8 +106,6 @@
       };
       console.log("🌐 IP:", context.ipAddress);
       console.log("🗺️ Geo:", context.geo);
-
-      // Fire custom event for late-binding updates
       window.dispatchEvent(new Event("truffleContextUpdated"));
     })
     .catch(() =>
@@ -114,6 +121,15 @@
 
   // ---------- Expose globally ----------
   window.TruffleContext = context;
+
+  // Update device on resize (optional, helps if user resizes a lot)
+  window.addEventListener("resize", (() => {
+    let t;
+    return () => {
+      clearTimeout(t);
+      t = setTimeout(() => (window.TruffleContext.device = deviceType()), 200);
+    };
+  })());
 
   // ---------- Language selector wiring ----------
   const sel = document.getElementById("langSelect");
@@ -148,7 +164,7 @@
   // ---------- Embedded Messaging integration ----------
   function compact(obj) {
     const out = {};
-    Object.keys(obj || {}).forEach(k => {
+    Object.keys(obj || {}).forEach((k) => {
       const v = obj[k];
       if (v !== null && v !== undefined && String(v).trim() !== "") out[k] = v;
     });
@@ -197,7 +213,6 @@
   // On ESW ready
   window.addEventListener("onEmbeddedMessagingReady", () => {
     console.log("✅ onEmbeddedMessagingReady");
-    // Sync ESW UI language with URL
     try {
       if (window.embeddedservice_bootstrap && embeddedservice_bootstrap.settings) {
         const map = { en: "en_US", fr: "fr_FR", de: "de_DE" };
@@ -214,4 +229,69 @@
     pushPrechatFields();
     console.log("🔁 Updated prechat fields with IP/Geo");
   });
+
+  // ---- Ensure Salesforce Embedded Messaging loads & initializes exactly once ----
+  (function ensureESW() {
+    const BOOT_URL = "https://tr1755614761355.my.site.com/ESWAlgolia1755631261845/assets/js/bootstrap.min.js";
+    const ORG_ID = "00DKY00000Ggx3e";
+    const DEPLOY = "Algolia";
+    const SNIPPET = "https://tr1755614761355.my.site.com/ESWAlgolia1755631261845";
+    const SCRT2 = "https://tr1755614761355.my.salesforce-scrt.com";
+
+    if (window.__TRUFFLE_ESW_INITTED) return;
+
+    function setLanguageFromUrl() {
+      try {
+        const map = { en: "en_US", fr: "fr_FR", de: "de_DE" };
+        const lang = (window.TruffleContext?.language) || "en";
+        embeddedservice_bootstrap.settings.language = map[lang] || "en_US";
+        console.log("🌐 ESW language set to:", embeddedservice_bootstrap.settings.language);
+      } catch (e) {
+        console.warn("Could not set ESW language:", e);
+      }
+    }
+
+    function initESW() {
+      if (!window.embeddedservice_bootstrap?.init) return false;
+      if (window.__TRUFFLE_ESW_INITTED) return true;
+      try {
+        setLanguageFromUrl();
+        embeddedservice_bootstrap.init(ORG_ID, DEPLOY, SNIPPET, { scrt2URL: SCRT2 });
+        window.__TRUFFLE_ESW_INITTED = true;
+        console.log("💬 Embedded Messaging initialized");
+        return true;
+      } catch (err) {
+        console.error("Error loading Embedded Messaging:", err);
+        return false;
+      }
+    }
+
+    // If already present, init now
+    if (initESW()) return;
+
+    // If tag exists but not loaded yet, listen for it
+    const existing = document.querySelector(`script[src="${BOOT_URL}"]`);
+    if (existing) {
+      existing.addEventListener("load", () => initESW());
+      existing.addEventListener("error", () => console.error("Failed to load ESW bootstrap:", BOOT_URL));
+    } else {
+      // Inject bootstrap
+      const s = document.createElement("script");
+      s.src = BOOT_URL;
+      s.async = true;
+      s.onload = () => initESW();
+      s.onerror = () => console.error("Failed to load ESW bootstrap:", BOOT_URL);
+      document.head.appendChild(s);
+    }
+
+    // Safety: poll up to 10s
+    const start = Date.now();
+    const timer = setInterval(() => {
+      if (initESW()) clearInterval(timer);
+      if (Date.now() - start > 10000) {
+        clearInterval(timer);
+        console.warn("Timed out waiting for ESW bootstrap.");
+      }
+    }, 100);
+  })();
 })();
