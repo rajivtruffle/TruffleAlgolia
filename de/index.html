@@ -4,22 +4,27 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
   <title>Truffle Media</title>
-  <link rel="icon" type="image/x-icon" href="/TruffleAlgolia/favicon.ico" />
+  <link rel="icon" href="../assets/favicon.ico" />
   <link rel="stylesheet" href="../assets/styles.css" />
 </head>
 <body>
+  <!-- Full-bleed background (image is set by app.js) -->
+  <div class="bg"></div>
+
+  <!-- Overlays -->
   <div class="lang-picker">
     <label for="langSelect">Language</label>
     <select id="langSelect" aria-label="Select language">
       <option value="en">English</option>
       <option value="fr">Français</option>
-      <option value="de">Deutsch</option>
+      <option value="de" selected>Deutsch</option>
     </select>
   </div>
-  <div class="stage">
-    <img class="hero" src="../assets/img3.png" alt="Deutsche Seite" />
-    <div class="caption">Deutsche Seite</div>
-  </div>
-  <script src="../assets/app.js"></script>
+
+  <!-- Optional caption (text can be updated by JS) -->
+  <div class="caption">Deutsche Seite</div>
+
+  <!-- App (loads ESW + sets background) -->
+  <script src="../assets/app.js" defer></script>
 </body>
 </html>
