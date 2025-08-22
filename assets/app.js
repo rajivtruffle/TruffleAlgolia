@@ -238,7 +238,7 @@
     console.log("✅ onEmbeddedMessagingReady");
     try {
       if (window.embeddedservice_bootstrap && embeddedservice_bootstrap.settings) {
-        const map = { en: "en_US", fr: "fr_FR", de: "de_DE" };
+        const map = { en: "en_US", fr: "fr", de: "de" };
         embeddedservice_bootstrap.settings.language = map[currentLang()] || "en_US";
       }
     } catch (e) {
