@@ -145,14 +145,44 @@
 
   // ---------- Full-bleed background by language ----------
   (function setLanguageBackground(){
-    const bg = document.querySelector(".bg");
-    if (!bg) return;
-    const lang = currentLang();
-    let url = "../assets/Algolia_en.png";
-    if (lang === "fr") url = "../assets/Algolia_fr.png";
-    if (lang === "de") url = "../assets/Algolia_de.png";
+  const bg = document.querySelector(".bg");
+  if (!bg) return;
+
+  const base = getBasePath(); // e.g. "/TruffleAlgolia/"
+  const lang = currentLang();
+
+  // Build the correct path under the repo root
+  const pick = (l) => `${base}assets/Algolia_${l}.png`;
+  let url = pick("en");
+  if (lang === "fr") url = pick("fr");
+  if (lang === "de") url = pick("de");
+
+  // Preload so we can log success/failure
+  const img = new Image();
+  img.onload = () => {
     bg.style.backgroundImage = `url("${url}")`;
-  })();
+    console.log("🎯 Background set:", url);
+  };
+  img.onerror = () => {
+    console.warn("❌ Could not load background:", url);
+    // Fallbacks to help during debugging
+    const fallbacks = [
+      `../assets/Algolia_${lang}.png`,
+      `/assets/Algolia_${lang}.png`,
+      `${base}assets/Algolia_en.png`,
+    ];
+    for (const f of fallbacks) {
+      const test = new Image();
+      test.onload = () => {
+        bg.style.backgroundImage = `url("${f}")`;
+        console.log("✅ Background fallback used:", f);
+      };
+      test.onerror = () => console.warn("↪︎ Fallback failed:", f);
+      test.src = f + `?cb=${Date.now()}`; // cache-bust while testing
+    }
+  };
+  img.src = url + `?cb=${Date.now()}`; // cache-bust GH Pages cache while testing
+})();
 
   // ---------- Embedded Messaging integration ----------
   function compact(obj) {
