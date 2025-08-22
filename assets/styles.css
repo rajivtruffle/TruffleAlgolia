@@ -1,0 +1,22 @@
+/* styles.css */
+html, body { margin: 0; padding: 0; height: 100%; }
+body {
+  display: flex; align-items: center; justify-content: center;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+  background: #f6f7f9;
+}
+.lang-picker {
+  position: fixed; top: 16px; right: 16px;
+  background: rgba(255,255,255,0.95);
+  border-radius: 12px; padding: 10px 12px;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+  display: flex; gap: 8px; align-items: center;
+}
+.lang-picker label { font-size: 14px; opacity: 0.8; }
+.lang-picker select {
+  font-size: 14px; padding: 6px 10px; border-radius: 8px;
+  border: 1px solid #ddd; background: #fff;
+}
+.stage { max-width: 1200px; width: 100%; padding: 24px; display: grid; place-items: center; }
+img.hero { max-width: 100%; height: auto; border-radius: 16px; box-shadow: 0 10px 28px rgba(0,0,0,0.12); }
+.caption { margin-top: 14px; color: #333; opacity: 0.9; }
